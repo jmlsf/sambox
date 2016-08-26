@@ -177,6 +177,40 @@
 				</executions>
 			</plugin>
 			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>appassembler-maven-plugin</artifactId>
+				<version>1.10</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<!-- make the lib folder look nicer -->
+					<repositoryLayout>flat</repositoryLayout>
+					<repositoryName>lib</repositoryName>
+					<!-- set alternative assemble directory -->
+					<assembleDirectory>${project.build.directory}/assembled</assembleDirectory>
+					<!-- Copy the contents from "/src/main/config" to the target configuration 
+						directory in the assembled application -->
+					<!--<copyConfigurationDirectory>true</copyConfigurationDirectory>-->
+					<!-- Include the target configuration directory in the beginning of 
+						the classpath declaration in the bin scripts -->
+					<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+					<!-- Default JVM memory args -->
+					<extraJvmArguments>-Dfile.encoding=UTF8 -Xmx1024M</extraJvmArguments>
+					<programs>
+						<program>
+							<mainClass>org.sejda.sambox.ExtractText</mainClass>
+							<id>sambox-extracttext</id>
+						</program>
+					</programs>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.19.1</version>
@@ -193,6 +227,11 @@
 	</build>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.7</version>
+        </dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>

@@ -90,6 +90,8 @@ public class TextPosition
     private final int rotation; // 0, 90, 180, 270 degrees of page rotation
     private final float x;
     private final float y;
+    private final float xOrig;
+    private final float yOrig; // Original code adjusts y to use an upper-left origin.  Don't want that.
     private final float pageHeight;
     private final float pageWidth;
 
@@ -147,7 +149,9 @@ public class TextPosition
         this.fontSize = fontSize;
         this.fontSizePt = fontSizeInPt;
 
-        x = getXRot(rotationAngle);
+        this.xOrig = x = getXRot(rotationAngle);  // Original code only modifies y, but store xOrig too for consistency
+        this.yOrig = getYLowerLeftRot(rotationAngle);
+
         if (rotationAngle == 0 || rotationAngle == 180)
         {
             y = this.pageHeight - getYLowerLeftRot(rotationAngle);
@@ -157,6 +161,11 @@ public class TextPosition
             y = this.pageWidth - getYLowerLeftRot(rotationAngle);
         }
     }
+
+    public float getPageHeight() { return this.pageHeight; }
+    public float getPageWidth() { return this.pageWidth; }
+    public float getXOrig() { return this.xOrig; }
+    public float getYOrig() { return this.yOrig; }
 
     /**
      * Return the string of characters stored in this object.

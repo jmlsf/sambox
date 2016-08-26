@@ -38,6 +38,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import com.google.gson.Gson;
+
 import org.sejda.sambox.pdmodel.PDDocument;
 import org.sejda.sambox.pdmodel.PDPage;
 import org.sejda.sambox.pdmodel.PDPageTree;
@@ -65,6 +67,8 @@ public class PDFTextStripper extends PDFTextStreamEngine
     private static final boolean useCustomQuickSort;
 
     private static final Logger LOG = LoggerFactory.getLogger(PDFTextStripper.class);
+
+    private static final Gson gson = new Gson();
 
     // enable the ability to set the default indent/drop thresholds
     // with -D system properties:
@@ -333,7 +337,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void startDocument(PDDocument document) throws IOException
     {
-        // no default implementation, but available for subclasses
+        writeString("[\n"); // Opening JSON bracket
     }
 
     /**
@@ -345,7 +349,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void endDocument(PDDocument document) throws IOException
     {
-        // no default implementation, but available for subclasses
+        writeString("]\n"); // Closing JSON bracket
     }
 
     /**
@@ -478,7 +482,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void startPage(PDPage page) throws IOException
     {
-        // default is to do nothing
+        writeString("[\n"); // Opening JSON bracket
     }
 
     /**
@@ -490,7 +494,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void endPage(PDPage page) throws IOException
     {
-        // default is to do nothing
+        writeString("[\n"); // Opening JSON bracket
     }
 
     private static final float END_OF_LAST_TEXT_X_RESET_VALUE = -1;
@@ -1734,16 +1738,36 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     private void writeLine(List<WordWithTextPositions> line) throws IOException
     {
-        int numberOfStrings = line.size();
-        for (int i = 0; i < numberOfStrings; i++)
-        {
-            WordWithTextPositions word = line.get(i);
-            writeString(word.getText(), word.getTextPositions());
-            if (i < numberOfStrings - 1)
-            {
-                writeWordSeparator();
-            }
-        }
+        // int numberOfStrings = line.size();
+        // for (int i = 0; i < numberOfStrings; i++)
+        // {
+        //     WordWithTextPositions word = line.get(i);
+        //     writeString(word.getText(), word.getTextPositions());
+        //     if (i < numberOfStrings - 1)
+        //     {
+        //         writeWordSeparator();
+        //     }
+        // }
+        boolean first = true;
+        for (WordWithTextPositions wp: line) {
+            for (TextPosition tp: wp.getTextPositions()) {
+                if (first) { 
+                    first = false;
+                } else {
+                    writeString(",\n");
+                }
+                writeString(
+                    String.format(
+                        "{\"box\":[%f,%f,%f,%f],\"utf8\": [", 
+                        tp.getXOrig(), 
+                        tp.getYOrig(), 
+                        tp.getWidth(), 
+                        tp.getHeight()
+                ));
+                writeString(this.gson.toJson(tp.getUnicode()));
+                writeString("]}");
+             }
+         }
     }
 
     /**
