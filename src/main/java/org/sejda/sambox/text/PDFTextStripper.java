@@ -39,6 +39,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.sejda.sambox.pdmodel.PDDocument;
 import org.sejda.sambox.pdmodel.PDPage;
@@ -49,6 +50,8 @@ import org.sejda.sambox.pdmodel.interactive.pagenavigation.PDThreadBead;
 import org.sejda.sambox.util.QuickSort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
 
 /**
  * This class will take a pdf document and strip out all of the text and ignore the formatting and such. Please note; it
@@ -62,13 +65,45 @@ import org.slf4j.LoggerFactory;
  */
 public class PDFTextStripper extends PDFTextStreamEngine
 {
+    private static final float[] boxHolder = new float[4]; // Reduce garbage creation.  Must be outside of CharacterBox because Gson serializes everything.
+    private class CharacterBox {
+        public float[] box;
+        public String utf8;
+        public void write(float a, float b, float c, float d, String utf8) throws IOException {
+            if (box == null) {
+                box = boxHolder;
+            }
+            box[0] = a;
+            box[1] = b;
+            box[2] = c;
+            box[3] = d;
+            this.utf8 = utf8;
+            write();
+        }
+        public void write(float[] box, String utf8) throws IOException {
+            this.box = box;
+            this.utf8 = utf8;
+            write();
+        }
+        private void write() throws IOException {
+            if (firstCharacter) {
+                firstCharacter = false;
+            } else {
+                writeString(",");
+            }
+            writeString(gson.toJson(this));
+        }
+    }
     private static float defaultIndentThreshold = 2.0f;
     private static float defaultDropThreshold = 2.5f;
     private static final boolean useCustomQuickSort;
 
     private static final Logger LOG = LoggerFactory.getLogger(PDFTextStripper.class);
 
-    private static final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder().serializeNulls().create(); // Express nulls in output instead of omitting
+    private boolean firstCharacter = true;
+    private boolean firstPage = true;
+    private final CharacterBox cb = new CharacterBox();
 
     // enable the ability to set the default indent/drop thresholds
     // with -D system properties:
@@ -231,6 +266,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     private void resetEngine()
     {
+        firstCharacter = true;
         currentPageNo = 0;
         document = null;
         if (charactersByArticle != null)
@@ -482,6 +518,12 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void startPage(PDPage page) throws IOException
     {
+        firstCharacter = true;
+        if (firstPage == true) {
+            firstPage = false;
+        } else {
+            writeString(",");
+        }
         writeString("[\n"); // Opening JSON bracket
     }
 
@@ -494,7 +536,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void endPage(PDPage page) throws IOException
     {
-        writeString("[\n"); // Opening JSON bracket
+        writeString("]\n"); // Closing JSON bracket
     }
 
     private static final float END_OF_LAST_TEXT_X_RESET_VALUE = -1;
@@ -750,7 +792,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void writeLineSeparator() throws IOException
     {
-        output.write(getLineSeparator());
+        cb.write(null, " ");
     }
 
     /**
@@ -760,7 +802,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void writeWordSeparator() throws IOException
     {
-        output.write(getWordSeparator());
+        cb.write(null, " ");
     }
 
     /**
@@ -769,10 +811,10 @@ public class PDFTextStripper extends PDFTextStreamEngine
      * @param text The text to write to the stream.
      * @throws IOException If there is an error when writing the text.
      */
-    protected void writeCharacters(TextPosition text) throws IOException
-    {
-        output.write(text.getUnicode());
-    }
+    // protected void writeCharacters(TextPosition text) throws IOException
+    // {
+    //     output.write(text.getUnicode());
+    // }
 
     /**
      * Write a Java string to the output stream. The default implementation will ignore the <code>textPositions</code>
@@ -782,10 +824,10 @@ public class PDFTextStripper extends PDFTextStreamEngine
      * @param textPositions The TextPositions belonging to the text.
      * @throws IOException If there is an error when writing the text.
      */
-    protected void writeString(String text, List<TextPosition> textPositions) throws IOException
-    {
-        writeString(text);
-    }
+    // protected void writeString(String text, List<TextPosition> textPositions) throws IOException
+    // {
+    //     writeString(text);
+    // }
 
     /**
      * Write a Java string to the output stream.
@@ -1624,7 +1666,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void writePageStart() throws IOException
     {
-        output.write(getPageStart());
+        cb.write(null, " ");
     }
 
     /**
@@ -1634,7 +1676,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void writePageEnd() throws IOException
     {
-        output.write(getPageEnd());
+        cb.write(null, " ");
     }
 
     /**
@@ -1748,24 +1790,15 @@ public class PDFTextStripper extends PDFTextStreamEngine
         //         writeWordSeparator();
         //     }
         // }
-        boolean first = true;
         for (WordWithTextPositions wp: line) {
             for (TextPosition tp: wp.getTextPositions()) {
-                if (first) { 
-                    first = false;
-                } else {
-                    writeString(",\n");
-                }
-                writeString(
-                    String.format(
-                        "{\"box\":[%f,%f,%f,%f],\"utf8\": [", 
-                        tp.getXOrig(), 
-                        tp.getYOrig(), 
-                        tp.getWidth(), 
-                        tp.getHeight()
-                ));
-                writeString(this.gson.toJson(tp.getUnicode()));
-                writeString("]}");
+                cb.write(
+                    tp.getXOrig(), 
+                    tp.getYOrig(), 
+                    tp.getWidth(), 
+                    tp.getHeight(),
+                    tp.getUnicode()
+                );        
              }
          }
     }
