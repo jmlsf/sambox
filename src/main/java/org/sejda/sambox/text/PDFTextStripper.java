@@ -792,7 +792,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void writeLineSeparator() throws IOException
     {
-        cb.write(null, " ");
+        cb.write(null, "\n");
     }
 
     /**
@@ -1800,6 +1800,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
                     tp.getUnicode()
                 );        
              }
+             writeWordSeparator();
          }
     }
 
