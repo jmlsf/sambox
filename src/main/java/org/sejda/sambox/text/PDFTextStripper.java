@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * This class will take a pdf document and strip out all of the text and ignore the formatting and such. Please note; it
  * is up to clients of this class to verify that a specific user has the correct permissions to extract text from the
  * PDF document.
- * 
+ *
  * The basic flow of this process is that we get a document and use a series of processXXX() functions that work on
  * smaller and smaller chunks of the page. Eventually, we fully process each page and then print it.
  *
@@ -518,13 +518,15 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void startPage(PDPage page) throws IOException
     {
+        PDRectangle rect = page.getMediaBox();
         firstCharacter = true;
         if (firstPage == true) {
             firstPage = false;
         } else {
             writeString(",");
         }
-        writeString("[\n"); // Opening JSON bracket
+        // Page dimenstions plus opening JSON bracket for main data
+        writeString("[[" + rect.getWidth() + "," + rect.getHeight() + "], [\n");
     }
 
     /**
@@ -536,7 +538,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      */
     protected void endPage(PDPage page) throws IOException
     {
-        writeString("]\n"); // Closing JSON bracket
+        writeString("]]\n"); // Closing JSON brackets
     }
 
     private static final float END_OF_LAST_TEXT_X_RESET_VALUE = -1;
@@ -787,7 +789,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Write the line separator value to the output stream.
-     * 
+     *
      * @throws IOException If there is a problem writing out the lineseparator to the document.
      */
     protected void writeLineSeparator() throws IOException
@@ -797,7 +799,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Write the word separator value to the output stream.
-     * 
+     *
      * @throws IOException If there is a problem writing out the wordseparator to the document.
      */
     protected void writeWordSeparator() throws IOException
@@ -1218,7 +1220,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * This will tell if the text stripper should add some more text formatting.
-     * 
+     *
      * @return true if some more text formatting will be added
      */
     public boolean getAddMoreFormatting()
@@ -1228,7 +1230,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * There will some additional text formatting be added if addMoreFormatting is set to true. Default is false.
-     * 
+     *
      * @param newAddMoreFormatting Tell PDFBox to add some more text formatting
      */
     public void setAddMoreFormatting(boolean newAddMoreFormatting)
@@ -1265,7 +1267,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
     /**
      * Get the current space width-based tolerance value that is being used to estimate where spaces in text should be
      * added. Note that the default value for this has been determined from trial and error.
-     * 
+     *
      * @return The current tolerance / scaling factor
      */
     public float getSpacingTolerance()
@@ -1277,7 +1279,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      * Set the space width-based tolerance value that is used to estimate where spaces in text should be added. Note
      * that the default value for this has been determined from trial and error. Setting this value larger will reduce
      * the number of spaces added.
-     * 
+     *
      * @param spacingToleranceValue tolerance / scaling factor to use
      */
     public void setSpacingTolerance(float spacingToleranceValue)
@@ -1288,7 +1290,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
     /**
      * Get the current character width-based tolerance value that is being used to estimate where spaces in text should
      * be added. Note that the default value for this has been determined from trial and error.
-     * 
+     *
      * @return The current tolerance / scaling factor
      */
     public float getAverageCharTolerance()
@@ -1300,7 +1302,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      * Set the character width-based tolerance value that is used to estimate where spaces in text should be added. Note
      * that the default value for this has been determined from trial and error. Setting this value larger will reduce
      * the number of spaces added.
-     * 
+     *
      * @param averageCharToleranceValue average tolerance / scaling factor to use
      */
     public void setAverageCharTolerance(float averageCharToleranceValue)
@@ -1311,7 +1313,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
     /**
      * returns the multiple of whitespace character widths for the current text which the current line start can be
      * indented from the previous line start beyond which the current line start is considered to be a paragraph start.
-     * 
+     *
      * @return the number of whitespace character widths to use when detecting paragraph indents.
      */
     public float getIndentThreshold()
@@ -1334,7 +1336,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
     /**
      * the minimum whitespace, as a multiple of the max height of the current characters beyond which the current line
      * start is considered to be a paragraph start.
-     * 
+     *
      * @return the character height multiple for max allowed whitespace between lines in the same paragraph.
      */
     public float getDropThreshold()
@@ -1356,7 +1358,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Returns the string which will be used at the beginning of a paragraph.
-     * 
+     *
      * @return the paragraph start string
      */
     public String getParagraphStart()
@@ -1366,7 +1368,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Sets the string which will be used at the beginning of a paragraph.
-     * 
+     *
      * @param s the paragraph start string
      */
     public void setParagraphStart(String s)
@@ -1376,7 +1378,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Returns the string which will be used at the end of a paragraph.
-     * 
+     *
      * @return the paragraph end string
      */
     public String getParagraphEnd()
@@ -1386,7 +1388,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Sets the string which will be used at the end of a paragraph.
-     * 
+     *
      * @param s the paragraph end string
      */
     public void setParagraphEnd(String s)
@@ -1396,7 +1398,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Returns the string which will be used at the beginning of a page.
-     * 
+     *
      * @return the page start string
      */
     public String getPageStart()
@@ -1406,7 +1408,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Sets the string which will be used at the beginning of a page.
-     * 
+     *
      * @param pageStartValue the page start string
      */
     public void setPageStart(String pageStartValue)
@@ -1416,7 +1418,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Returns the string which will be used at the end of a page.
-     * 
+     *
      * @return the page end string
      */
     public String getPageEnd()
@@ -1426,7 +1428,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Sets the string which will be used at the end of a page.
-     * 
+     *
      * @param pageEndValue the page end string
      */
     public void setPageEnd(String pageEndValue)
@@ -1436,7 +1438,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Returns the string which will be used at the beginning of an article.
-     * 
+     *
      * @return the article start string
      */
     public String getArticleStart()
@@ -1446,7 +1448,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Sets the string which will be used at the beginning of an article.
-     * 
+     *
      * @param articleStartValue the article start string
      */
     public void setArticleStart(String articleStartValue)
@@ -1456,7 +1458,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Returns the string which will be used at the end of an article.
-     * 
+     *
      * @return the article end string
      */
     public String getArticleEnd()
@@ -1466,7 +1468,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Sets the string which will be used at the end of an article.
-     * 
+     *
      * @param articleEndValue the article end string
      */
     public void setArticleEnd(String articleEndValue)
@@ -1476,7 +1478,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * handles the line separator for a new line given the specified current and previous TextPositions.
-     * 
+     *
      * @param current the current text position
      * @param lastPosition the previous text position
      * @param lastLineStartPosition the last text position that followed a line separator.
@@ -1619,7 +1621,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * writes the paragraph separator string to the output.
-     * 
+     *
      * @throws IOException if something went wrong
      */
     protected void writeParagraphSeparator() throws IOException
@@ -1630,7 +1632,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Write something (if defined) at the start of a paragraph.
-     * 
+     *
      * @throws IOException if something went wrong
      */
     protected void writeParagraphStart() throws IOException
@@ -1646,7 +1648,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Write something (if defined) at the end of a paragraph.
-     * 
+     *
      * @throws IOException if something went wrong
      */
     protected void writeParagraphEnd() throws IOException
@@ -1661,7 +1663,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Write something (if defined) at the start of a page.
-     * 
+     *
      * @throws IOException if something went wrong
      */
     protected void writePageStart() throws IOException
@@ -1671,7 +1673,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Write something (if defined) at the end of a page.
-     * 
+     *
      * @throws IOException if something went wrong
      */
     protected void writePageEnd() throws IOException
@@ -1684,7 +1686,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      * does not match such a pattern. The list of Patterns tested against is given by the {@link #getListItemPatterns()}
      * method. To add to the list, simply override that method (if sub-classing) or explicitly supply your own list
      * using {@link #setListItemPatterns(List)}.
-     * 
+     *
      * @param pw position
      * @return the matching pattern
      */
@@ -1731,7 +1733,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      * (matches "[1]", "[2]", ...).
      * <p>
      * This method returns a list of such regular expression Patterns.
-     * 
+     *
      * @return a list of Pattern objects.
      */
     protected List<Pattern> getListItemPatterns()
@@ -1755,7 +1757,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      * Order of the supplied list of patterns is important as most common patterns should come first. Patterns should be
      * strict in general, and all will be used with case sensitivity on.
      * </p>
-     * 
+     *
      * @param string the string to be searched
      * @param patterns list of patterns
      * @return matching pattern
@@ -1774,7 +1776,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Write a list of string containing a whole line of a document.
-     * 
+     *
      * @param line a list with the words of the given line
      * @throws IOException if something went wrong
      */
@@ -1793,12 +1795,12 @@ public class PDFTextStripper extends PDFTextStreamEngine
         for (WordWithTextPositions wp: line) {
             for (TextPosition tp: wp.getTextPositions()) {
                 cb.write(
-                    tp.getXOrig(), 
-                    tp.getYOrig(), 
-                    tp.getWidth(), 
+                    tp.getXOrig(),
+                    tp.getYOrig(),
+                    tp.getWidth(),
                     tp.getHeight(),
                     tp.getUnicode()
-                );        
+                );
              }
              writeWordSeparator();
          }
@@ -1806,7 +1808,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Normalize the given list of TextPositions.
-     * 
+     *
      * @param line list of TextPositions
      * @return a list of strings, one string for every word
      */
@@ -1833,9 +1835,9 @@ public class PDFTextStripper extends PDFTextStreamEngine
      * word. If the word is a full line, the results will be the best. If the word contains of single words or
      * characters, the order of the characters in a word or words in a line may wrong, due to RTL and LTR marks and
      * characters!
-     * 
+     *
      * Based on http://www.nesterovsky-bros.com/weblog/2013/07/28/VisualToLogicalConversionInJava.aspx
-     * 
+     *
      * @param word The word that shall be processed
      * @return new word with the correct direction of the containing characters
      */
@@ -1935,7 +1937,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * This method parses the bidi file provided as inputstream.
-     * 
+     *
      * @param inputStream - The bidi file as inputstream
      * @throws IOException if any line could not be read by the LineNumberReader
      */
@@ -2045,7 +2047,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
     /**
      * Used within {@link #normalize(List, boolean, boolean)} to handle a {@link TextPosition}.
-     * 
+     *
      * @return The StringBuilder that must be used when calling this method.
      */
     private StringBuilder normalizeAdd(List<WordWithTextPositions> normalized,
@@ -2137,7 +2139,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
      * to subclasses. Also, conceptually TextPosition is immutable while these flags need to be set post-creation so it
      * makes sense to put these flags in this separate class.
      * </p>
-     * 
+     *
      * @author m.martinez@ll.mit.edu
      */
     private static final class PositionWrapper
@@ -2161,7 +2163,7 @@ public class PDFTextStripper extends PDFTextStreamEngine
 
         /**
          * Returns the underlying TextPosition object.
-         * 
+         *
          * @return the text position
          */
         public TextPosition getTextPosition()
